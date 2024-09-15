@@ -6,13 +6,23 @@ import (
 	"net"
 )
 
+const (
+	DefaultPort = ":8080"
+)
+
+type RequestHandler func(r Request) error
+
 type Server struct {
 	port string // The Port that the server will listen on, defaults to 8080
+
+	requestsCh     chan Request   // All generated Requests
+	requestHandler RequestHandler // Function that is used to handle requests
 }
 
 func NewServer() *Server {
 	s := &Server{
-		port: ":8080",
+		port:       DefaultPort,
+		requestsCh: make(chan Request),
 	}
 	return s
 }
@@ -20,13 +30,15 @@ func NewServer() *Server {
 func (s *Server) handleConnection(connection net.Conn) {
 	defer connection.Close()
 	reader := bufio.NewReader(connection)
+	d := make([]string, 0)
 	for {
 		msg, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("connection closed")
+			r := newRequest(d)
+			s.requestsCh <- r
 			return
 		}
-		fmt.Printf("Message Received: %s", msg)
+		d = append(d, msg)
 	}
 }
 
@@ -36,7 +48,7 @@ func (s *Server) Start() {
 	}
 	l, err := net.Listen("tcp", s.port)
 	if err != nil {
-		fmt.Errorf("unable to start server")
+		fmt.Println("unable to start server")
 		return
 	}
 	defer l.Close()
