@@ -16,6 +16,7 @@ func newRequest(data []string) Request {
 		Method:      reqParts[0],
 		Path:        reqParts[1],
 		HttpVersion: reqParts[2],
+		Headers:     make(map[string]string),
 	}
 
 	for _, v := range data[1:] {
