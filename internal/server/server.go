@@ -29,14 +29,16 @@ func NewServer() *Server {
 }
 
 func (s *Server) handleConnection(connection net.Conn) {
+	fmt.Printf("Connection Received: %s\n", connection.LocalAddr().String())
 	defer connection.Close()
 	reader := bufio.NewReader(connection)
 	writer := bufio.NewWriter(connection)
 	d := make([]string, 0)
 	for {
 		msg, err := reader.ReadString('\n')
-		if err != nil {
+		if err != nil || msg == "\r\n" {
 			r := newRequest(d)
+			fmt.Printf("Sinking Request: %s", string(r.Method))
 			s.requestsCh <- r
 			break
 		}
@@ -69,7 +71,7 @@ func (s *Server) Start() {
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			fmt.Println("error accepting connection")
+			fmt.Println("unable to start TCP Server")
 			continue
 		}
 		go s.handleConnection(c)

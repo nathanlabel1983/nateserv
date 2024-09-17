@@ -31,10 +31,10 @@ func (r *Response) GetResponseString() string {
 func NewResponse(status, reason, body string) Response {
 	res := Response{
 		Version: DefaultHTTPVersion,
-		Status:  StatusOK,
-		Reason:  StatusOKReason,
+		Status:  status,
+		Reason:  reason,
 		Headers: make(map[string]string),
-		Body:    "<p>Hello World</p>",
+		Body:    body,
 	}
 	return res
 }
