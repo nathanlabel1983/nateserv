@@ -14,8 +14,13 @@ type Response struct {
 const (
 	DefaultHTTPVersion = "HTTP/1.1"
 
-	StatusOK       = "200"
-	StatusOKReason = "OK"
+	StatusOK = "200"
+)
+
+var (
+	StatusReasons = map[string]string{
+		StatusOK: "OK",
+	}
 )
 
 func (r *Response) GetResponseString() string {
@@ -28,11 +33,11 @@ func (r *Response) GetResponseString() string {
 	return responseString
 }
 
-func NewResponse(status, reason, body string) Response {
+func NewResponse(status, body string) Response {
 	res := Response{
 		Version: DefaultHTTPVersion,
 		Status:  status,
-		Reason:  reason,
+		Reason:  StatusReasons[StatusOK],
 		Headers: make(map[string]string),
 		Body:    body,
 	}

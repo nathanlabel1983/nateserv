@@ -17,6 +17,9 @@ type Server struct {
 
 	requestsCh     chan Request   // All generated Requests
 	requestHandler RequestHandler // Function that is used to handle requests
+
+	connectionsCh     chan *HTTPConnection // Channel for incoming connections
+	activeConnections []*HTTPConnection    // Slice of all active connections
 }
 
 func NewServer() *Server {
@@ -24,6 +27,9 @@ func NewServer() *Server {
 		port:           DefaultPort,
 		requestsCh:     make(chan Request, 100),
 		requestHandler: defaultRequestHandler,
+
+		connectionsCh:     make(chan *HTTPConnection, 10),
+		activeConnections: make([]*HTTPConnection, 0),
 	}
 	return s
 }
@@ -38,13 +44,13 @@ func (s *Server) handleConnection(connection net.Conn) {
 		msg, err := reader.ReadString('\n')
 		if err != nil || msg == "\r\n" {
 			r := newRequest(d)
-			fmt.Printf("Sinking Request: %s", string(r.Method))
+			fmt.Printf("Sinking Request: %s\n", string(r.Method))
 			s.requestsCh <- r
 			break
 		}
 		d = append(d, msg)
 	}
-	res := NewResponse(StatusOK, StatusOKReason, "<p>Hello World</p>")
+	res := NewResponse(StatusOK, "<p>Hello World</p>")
 	writer.WriteString(res.GetResponseString())
 	writer.Flush()
 }
@@ -79,13 +85,8 @@ func (s *Server) Start() {
 }
 
 func defaultRequestHandler(r Request) error {
-	fmt.Printf("Method: %s\n", r.Method)
-	fmt.Printf("Path: %s\n", r.Path)
-	fmt.Printf("HttpVersion: %s\n", r.HttpVersion)
-	fmt.Println("")
-	fmt.Println("Headers")
-	for k, v := range r.Headers {
-		fmt.Printf("[%s]%s", k, v)
+	if r.Method == "GET" {
+		fmt.Println("Processing GET")
 	}
 	return nil
 }
